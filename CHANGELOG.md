@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-10
+
 ### Added
 
 - Maintenance tasks created from the Configuration screen: thirteen suggested
@@ -23,3 +25,6 @@ the notes of the version's GitHub Release.
   actions "Mark maintenance as done" and "Read the maintenance tasks".
 - Tasks stored in `/data/tasks.json`, with atomic writes and a backup.
 - English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-entretien/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-entretien/releases/tag/v1.0.0
