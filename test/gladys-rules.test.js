@@ -30,7 +30,8 @@ async function hundredTasks(world) {
       every: String((i % 10) + 1),
       unit: units[i % 4],
       last_done: i === 1 ? '01/01/1990' : `-${i * 7}`,
-      notice_days: String(i % 31),
+      // Days (i % 4 === 0) get no notice: a notice is shorter than the period.
+      notice_days: String(i % 2 === 0 ? 0 : Math.min(i % 31, 6)),
     });
     assert.equal(ack.success, true, ack.error);
   }

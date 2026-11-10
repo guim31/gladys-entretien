@@ -15,7 +15,7 @@
 
 import { createLogger } from '@gladysassistant/integration-sdk';
 import { buildDevice, taskIdOf, taskIds, taskStates } from './devices.js';
-import { formatDate, localDate, parseDate, UNITS } from './tasks/dates.js';
+import { addPeriod, daysBetween, formatDate, localDate, parseDate, UNITS } from './tasks/dates.js';
 import {
   cleanText,
   DEFAULT_NOTICE,
@@ -40,6 +40,8 @@ export const TRIGGERS = Object.freeze({
 });
 
 const TICK_MS = 60_000;
+// The answer of a Configuration action stays readable.
+const SUMMARY_MAX_LENGTH = 1000;
 // The front shows "no recent value" past 48 h: an unchanged value is sent again.
 const HEARTBEAT_MS = 12 * 3600_000;
 
@@ -364,7 +366,13 @@ export class TasksHub {
       if (!name) {
         throw new UserError('emptyName');
       }
-      const existing = this.findByName(draft.tasks, name);
+      // Only the task's own name (never a name given in Gladys to another
+      // device), or the task made from the same suggestion when no name is typed.
+      const existing =
+        draft.tasks.find((task) => matchKey(task.name) === matchKey(name)) ??
+        (optionalText(fields.name) === undefined && templateKey
+          ? (draft.tasks.find((task) => task.template === templateKey) ?? null)
+          : null);
       const every = optionalInteger(fields.every);
       const unit = optionalText(fields.unit);
       const notice = optionalInteger(fields.notice_days);
@@ -375,7 +383,7 @@ export class TasksHub {
       if (unit !== undefined && !UNITS.includes(unit)) {
         throw new UserError('badPeriod');
       }
-      const base = template ?? existing ?? null;
+      const base = existing ?? template ?? null;
       const period = {
         every: every ?? base?.every,
         unit: unit ?? base?.unit,
@@ -383,8 +391,21 @@ export class TasksHub {
       if (!validPeriod(period.every, period.unit)) {
         throw new UserError('badPeriod');
       }
-      const noticeDays = notice ?? template?.notice ?? existing?.notice_days ?? DEFAULT_NOTICE;
-      if (!Number.isInteger(noticeDays) || noticeDays < 0 || noticeDays > LIMITS.notice) {
+      // A notice as long as the period would make the task due soon the day
+      // it is done: a typed one is refused, a default one is shortened.
+      const periodDays = daysBetween(
+        '2000-01-01',
+        addPeriod('2000-01-01', period.every, period.unit),
+      );
+      const noticeDays =
+        notice ??
+        Math.min(existing?.notice_days ?? template?.notice ?? DEFAULT_NOTICE, periodDays - 1);
+      if (
+        !Number.isInteger(noticeDays) ||
+        noticeDays < 0 ||
+        noticeDays > LIMITS.notice ||
+        (noticeDays > 0 && noticeDays >= periodDays)
+      ) {
         throw new UserError('badNotice');
       }
 
@@ -483,7 +504,13 @@ export class TasksHub {
           date: `${formatDate(status.due, language)}, ${this.remaining(status, language)}`,
         });
       })
-      .join(' · ');
+      .reduce((text, line) => {
+        if (text.endsWith('…')) {
+          return text;
+        }
+        const next = text ? `${text} · ${line}` : line;
+        return next.length > SUMMARY_MAX_LENGTH ? `${text} · …` : next;
+      }, '');
   }
 
   /** `in 12 d`, `today`, `3 d late`. */

@@ -296,3 +296,50 @@ test('a device added later gets its states at once', async (t) => {
   assert.equal(w.fake.lastState(`${device.external_id}:days_left`), 61);
   assert.ok(w.fake.widgetRefreshes.length > 0);
 });
+
+test('changing a task keeps what was not typed, and never touches another task', async (t) => {
+  const w = await world(t, { dataDir: emptyDataDir(), config: { language: 'fr' } });
+  await w.fake.action('create_task', { template: 'chimney', every: '2', unit: 'years' });
+  // The same suggestion again, in another language: the same task, unchanged period.
+  await w.fake.configUpdated({ language: 'en' });
+  const again = await w.fake.action('create_task', { template: 'chimney', notice_days: '10' });
+  assert.equal(again.success, true, again.error);
+  assert.equal(w.hub.tasks.length, 1);
+  assert.deepEqual(
+    [w.hub.tasks[0].every, w.hub.tasks[0].unit, w.hub.tasks[0].notice_days],
+    [2, 'years', 10],
+  );
+  // A device renamed in Gladys does not capture a new task of that name.
+  await createAll(w);
+  const [device] = w.fake.devices;
+  await w.fake.deviceUpdated({ ...device, name: 'Garage' });
+  await w.fake.action('create_task', { name: 'Garage', every: '3', unit: 'months' });
+  assert.equal(w.hub.tasks.length, 2);
+  assert.equal(w.hub.tasks[0].every, 2);
+});
+
+test('a notice as long as the period is refused', async (t) => {
+  const w = await world(t, { dataDir: emptyDataDir() });
+  const ack = await w.fake.action('create_task', {
+    name: 'Plantes',
+    every: '2',
+    unit: 'weeks',
+    notice_days: '14',
+  });
+  assert.match(ack.error, /shorter than the period/);
+  const ok = await w.fake.action('create_task', { name: 'Plantes', every: '1', unit: 'days' });
+  assert.equal(ok.success, true, ok.error);
+});
+
+test('show_tasks stays readable with a hundred tasks', async (t) => {
+  const w = await world(t, { dataDir: emptyDataDir() });
+  for (let i = 0; i < 100; i += 1) {
+    await w.fake.action('create_task', {
+      name: `Tâche numéro ${i} ${'x'.repeat(20)}`,
+      template: 'boiler',
+    });
+  }
+  const shown = await w.fake.action('show_tasks', {});
+  assert.ok(shown.data.message.en.length <= 1004, String(shown.data.message.en.length));
+  assert.ok(shown.data.message.en.endsWith('· …'));
+});

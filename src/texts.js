@@ -32,7 +32,7 @@ export const MESSAGES = {
     emptyName: () => 'Enter a name, or choose a suggested task.',
     badPeriod: () =>
       'Give the period: every 1 to 120 days, weeks, months or years, 10 years at most.',
-    badNotice: () => 'The notice is 0 to 365 days.',
+    badNotice: () => 'The notice is 0 to 365 days, and shorter than the period.',
     badTemplate: () => 'Unknown suggested task: choose one from the list.',
     tooManyTasks: ({ count }) => `${count} tasks at most.`,
     badDate: ({ name }) => `Date not understood ("${name}"): e.g. 2026-03-14, 14/03/2026, -7.`,
@@ -57,7 +57,8 @@ export const MESSAGES = {
     emptyName: () => 'Saisissez un nom, ou choisissez une tâche proposée.',
     badPeriod: () =>
       'Indiquez la période : tous les 1 à 120 jours, semaines, mois ou ans, 10 ans au plus.',
-    badNotice: () => 'Le délai de prévenance va de 0 à 365 jours.',
+    badNotice: () =>
+      'Le délai de prévenance va de 0 à 365 jours, et reste plus court que la période.',
     badTemplate: () => 'Tâche proposée inconnue : choisissez-en une dans la liste.',
     tooManyTasks: ({ count }) => `${count} tâches au maximum.`,
     badDate: ({ name }) => `Date incomprise (« ${name} ») : ex. 2026-03-14, 14/03/2026, -7.`,
@@ -83,7 +84,7 @@ export const MESSAGES = {
     emptyName: () => 'Gib einen Namen ein oder wähle eine vorgeschlagene Aufgabe.',
     badPeriod: () =>
       'Gib den Zeitraum an: alle 1 bis 120 Tage, Wochen, Monate oder Jahre, höchstens 10 Jahre.',
-    badNotice: () => 'Die Vorwarnzeit beträgt 0 bis 365 Tage.',
+    badNotice: () => 'Die Vorwarnzeit beträgt 0 bis 365 Tage und ist kürzer als der Zeitraum.',
     badTemplate: () => 'Unbekannte vorgeschlagene Aufgabe: Wähle eine aus der Liste.',
     tooManyTasks: ({ count }) => `Höchstens ${count} Aufgaben.`,
     badDate: ({ name }) => `Datum nicht verstanden („${name}“): z. B. 2026-03-14, 14.03.2026, -7.`,
@@ -110,7 +111,7 @@ export const MESSAGES = {
     emptyName: () => 'Introduzca un nombre o elija una tarea propuesta.',
     badPeriod: () =>
       'Indique el periodo: cada 1 a 120 días, semanas, meses o años, 10 años como máximo.',
-    badNotice: () => 'El aviso previo va de 0 a 365 días.',
+    badNotice: () => 'El aviso previo va de 0 a 365 días y es más corto que el periodo.',
     badTemplate: () => 'Tarea propuesta desconocida: elija una de la lista.',
     tooManyTasks: ({ count }) => `${count} tareas como máximo.`,
     badDate: ({ name }) => `Fecha no entendida («${name}»): p. ej. 2026-03-14, 14/03/2026, -7.`,

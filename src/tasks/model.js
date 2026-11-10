@@ -17,7 +17,7 @@
 // -----------------------------------------------------------------------------
 
 import { randomBytes } from 'node:crypto';
-import { addPeriod, daysBetween, isDate, UNITS } from './dates.js';
+import { addPeriod, daysBetween, isDate, localDate, UNITS } from './dates.js';
 
 export const SCHEMA_VERSION = 1;
 
@@ -261,11 +261,15 @@ function normalizeTask(entry, names, ids, now, today) {
  * A well-formed document from whatever JSON was read.
  * @param {unknown} raw
  * @param {string} [now] ISO date used for missing creation dates
- * @param {string} [today] local date used for a missing last_done
+ * @param {string} [today] local date (TZ) used for a missing last_done
  * @returns {object} the document
  * @throws {TypeError} when `raw` is not a tasks document at all
  */
-export function normalizeDocument(raw, now = new Date().toISOString(), today = now.slice(0, 10)) {
+export function normalizeDocument(
+  raw,
+  now = new Date().toISOString(),
+  today = localDate(Date.parse(now)),
+) {
   if (!isObject(raw) || !Array.isArray(raw.tasks)) {
     throw new TypeError('Not a tasks document');
   }
