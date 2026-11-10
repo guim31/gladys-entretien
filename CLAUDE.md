@@ -32,14 +32,18 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+src/app.js                        registers every handler on the SDK (or its fake Gladys)
+src/hub.js                        the tasks in memory, every change (serialized), reminders, minute timer
+src/store.js                      /data/tasks.json: atomic write, backup, corrupt file kept aside
+src/tasks/model.js                document schema (version 1), normalization, limits, templates, status
+src/tasks/dates.js                local dates (TZ), periods (month ends, 29 February), parsing, display
+src/devices.js                    one device per task: days left, period left, due soon, overdue, dates
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/widgets.js                    the "upcoming" dashboard widget (manifest `widgets`)
+src/texts.js                      messages in four languages, UserError
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
@@ -251,3 +255,32 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Rappels d'entretien (cette intégration)
+
+- **Pas de service externe** : les tâches vivent dans `/data/tasks.json` (`schema: 1`), même
+  persistance que gladys-local-lists (`TasksHub.mutate` : une modification à la fois, sur une copie,
+  écrite — temporaire + `fsync` + `rename`, ancien en `.bak` — avant de devenir l'état courant).
+- **Type `device`, pas `calendar`** : une intégration `calendar` n'a ni appareils ni Découverte (spec
+  `capabilities/calendar-type.md`, consentement par utilisateur), et une intégration `device` ne peut
+  pas écrire d'événements de calendrier. Les échéances passent par les fonctionnalités, le widget et les
+  scènes ; dit dans la documentation.
+- **Identité** : `externalIds('task', <id aléatoire de 12 hex>)`, jamais le nom. Les six
+  fonctionnalités sont les mêmes pour toute tâche : structure figée.
+- **Dates** : chaînes locales `YYYY-MM-DD` (fuseau `TZ` de Gladys), arithmétique sur minuits UTC (pas
+  de décalage à l'heure d'été). Mois et années gardent le jour ou prennent le dernier jour du mois
+  (31/01 + 1 mois = 28/02, 29/02 + 1 an = 28/02). « Bientôt dû » : `0 <= jours restants <= délai` ;
+  « en retard » : dès le lendemain de l'échéance.
+- **Rappels** : `soon_notified_for` / `overdue_notified_for` gardent l'échéance déjà signalée ; une
+  nouvelle échéance (fait, période changée) réarme les deux. Un retard couvre « bientôt dû » (jamais
+  les deux pour une même échéance si le retard part en premier). Un événement refusé par Gladys est
+  retenté à la minute suivante, jamais envoyé deux fois.
+- **« Fait » à une date antérieure** (scène, widget, action) : la date entre dans l'historique mais
+  `last_done` reste la plus récente ; seule l'action « Créer ou modifier » avec `last_done` corrige la
+  dernière date (vers le passé aussi).
+- **Pièges** : les sorties d'une action de scène sont dans `ack.data.outputs` du faux Gladys, la
+  réponse d'une action de Configuration dans `ack.data.message`, et un état texte se publie avec la
+  clé `text` (pas `state`) dans `publishChangedStates`.
+- Une fonctionnalité seule de son type affiche le libellé générique du type : d'où deux `input/binary`
+  (bientôt dû, en retard) et deux `text/text` (dernière fois, prochaine échéance) ; `duration/integer`
+  et `maintenance/life-remaining` restent seules (libellés « Durée » et « Durée de vie restante »).
