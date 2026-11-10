@@ -1,41 +1,88 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene action handlers (manifest `scene_actions`, Gladys 5.1+). The task is a
+// device of the integration (`source: "devices"`).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
+// - `mark_done`: the job is done (an NFC tag on the boiler, a button by the
+//   vacuum cleaner), today or on a given date: the count starts again;
+// - `read_tasks`: what is due soon or overdue as one text, and the counts,
+//   for a weekly message or a spoken announcement.
 //
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
-//
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// Errors are thrown in the configured language: a scene shows them as is.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
+import { formatDate } from './tasks/dates.js';
+import { taskStatus } from './tasks/model.js';
+import { message, UserError } from './texts.js';
 
-const logger = createLogger({ name: 'scenes' });
+// The `text` output is a string of 1000 characters at most (scene variables).
+const TEXT_MAX_LENGTH = 1000;
 
-export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
-  },
+function joinItems(items) {
+  let text = '';
+  for (const item of items) {
+    const next = text ? `${text}, ${item}` : item;
+    if (next.length > TEXT_MAX_LENGTH - 2) {
+      return `${text}…`;
+    }
+    text = next;
+  }
+  return text;
+}
+
+const localize = (hub, fn) => async (fields) => {
+  try {
+    return await fn(fields ?? {});
+  } catch (err) {
+    throw err instanceof UserError ? new Error(err.localized(hub.config.language)) : err;
+  }
 };
+
+export function sceneActions(hub) {
+  return {
+    mark_done: localize(hub, async (fields) => {
+      const { task } = await hub.markDone({
+        device: fields.task,
+        date: fields.date,
+        source: 'scene',
+      });
+      const status = taskStatus(task, hub.today());
+      return {
+        task_name: hub.displayName(task),
+        last_done: task.last_done,
+        next_due: status.due,
+        days_left: status.daysLeft,
+      };
+    }),
+
+    read_tasks: localize(hub, async (fields) => {
+      const language = hub.config.language;
+      const all = hub.sorted();
+      const urgent = all.filter(({ status }) => status.overdue || status.soon);
+      const listed = fields.scope === 'all' ? all : urgent;
+      const next = all[0];
+      return {
+        overdue: all.filter(({ status }) => status.overdue).length,
+        due_soon: all.filter(({ status }) => status.soon).length,
+        next_task: next ? hub.displayName(next.task) : '',
+        next_due: next?.status.due ?? '',
+        next_days_left: next?.status.daysLeft ?? 0,
+        text:
+          listed.length === 0
+            ? message('readNothing', language)
+            : joinItems(
+                listed.map(({ task, status }) =>
+                  message('readItem', language, {
+                    name: hub.displayName(task),
+                    date:
+                      status.overdue || status.soon
+                        ? hub.remaining(status, language)
+                        : formatDate(status.due, language),
+                  }),
+                ),
+              ),
+      };
+    }),
+  };
+}
+
+export const SCENE_ACTION_KEYS = Object.keys(sceneActions({ config: {} }));

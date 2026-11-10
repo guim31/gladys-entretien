@@ -1,177 +1,928 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Maintenance reminders",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Recurring home maintenance (boiler, filters, chimney…): days left, reminders, Done button.",
+    "fr": "Entretiens récurrents (chaudière, filtres, ramonage…) : jours restants, rappels, bouton Fait.",
+    "de": "Wiederkehrende Wartung (Heizung, Filter, Kamin…): Resttage, Erinnerungen, Erledigt-Taste.",
+    "es": "Mantenimiento periódico (caldera, filtros, chimenea…): días restantes, avisos, botón Hecho."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-entretien:1.0.0",
+  "gladys_version": ">=5.2.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-entretien/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
-      "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+      "label": {
+        "en": "Your maintenance tasks",
+        "fr": "Vos tâches d'entretien",
+        "de": "Deine Wartungsaufgaben",
+        "es": "Sus tareas de mantenimiento"
       },
-      "links": [
+      "description": {
+        "en": "Create a task with the buttons below (a suggested one, or your own), then add it in the Discovery tab: it becomes a device with its days left, for the dashboard (Upcoming maintenance widget) and the scenes. Everything stays in Gladys.",
+        "fr": "Créez une tâche avec les boutons ci-dessous (une proposée, ou la vôtre), puis ajoutez-la dans l'onglet Découverte : elle devient un appareil avec ses jours restants, pour le tableau de bord (widget Prochains entretiens) et les scènes. Tout reste dans Gladys.",
+        "de": "Erstelle eine Aufgabe mit den Schaltflächen unten (eine vorgeschlagene oder deine eigene) und füge sie im Tab Erkennung hinzu: So wird sie zu einem Gerät mit ihren Resttagen, für das Dashboard (Widget Nächste Wartungen) und die Szenen. Alles bleibt in Gladys.",
+        "es": "Cree una tarea con los botones de abajo (una propuesta o la suya) y luego añádala en la pestaña Descubrimiento: se convierte en un dispositivo con sus días restantes, para el panel (widget Próximos mantenimientos) y las escenas. Todo se queda en Gladys."
+      }
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de funciones"
+      },
+      "description": {
+        "en": "Names given to the features when a task is added, dates and texts sent to scenes.",
+        "fr": "Noms donnés aux fonctionnalités à l'ajout d'une tâche, dates et textes envoyés aux scènes.",
+        "de": "Namen der Funktionen beim Hinzufügen einer Aufgabe, Daten und an Szenen gesendete Texte.",
+        "es": "Nombres de las funciones al añadir una tarea, fechas y textos enviados a las escenas."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
         }
       ]
-    },
-    {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
-      },
-      "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "create_task",
+      "label": {
+        "en": "Create or change a task",
+        "fr": "Créer ou modifier une tâche",
+        "de": "Aufgabe erstellen oder ändern",
+        "es": "Crear o modificar una tarea"
+      },
+      "description": {
+        "en": "Choose a suggested task, or type a name and a period. A task of the same name is changed instead. Then add it in Discovery.",
+        "fr": "Choisissez une tâche proposée, ou saisissez un nom et une période. Une tâche du même nom est modifiée. Ajoutez-la ensuite dans Découverte.",
+        "de": "Wähle eine vorgeschlagene Aufgabe oder gib einen Namen und einen Zeitraum ein. Eine Aufgabe mit gleichem Namen wird geändert. Füge sie danach unter Erkennung hinzu.",
+        "es": "Elija una tarea propuesta, o escriba un nombre y un periodo. Una tarea del mismo nombre se modifica. Luego añádala en Descubrimiento."
+      },
       "fields": [
         {
-          "key": "device",
+          "key": "template",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": {
+            "en": "Suggested task (optional)",
+            "fr": "Tâche proposée (facultatif)",
+            "de": "Vorgeschlagene Aufgabe (optional)",
+            "es": "Tarea propuesta (opcional)"
+          },
+          "options": [
+            {
+              "value": "boiler",
+              "label": {
+                "en": "Boiler service (1 year(s))",
+                "fr": "Entretien de la chaudière (1 an(s))",
+                "de": "Heizungswartung (1 Jahr(e))",
+                "es": "Revisión de la caldera (1 año(s))"
+              }
+            },
+            {
+              "value": "chimney",
+              "label": {
+                "en": "Chimney sweeping (1 year(s))",
+                "fr": "Ramonage (1 an(s))",
+                "de": "Schornsteinfeger (1 Jahr(e))",
+                "es": "Deshollinado (1 año(s))"
+              }
+            },
+            {
+              "value": "car_inspection",
+              "label": {
+                "en": "Vehicle inspection (2 year(s))",
+                "fr": "Contrôle technique (2 an(s))",
+                "de": "Hauptuntersuchung (2 Jahr(e))",
+                "es": "ITV del vehículo (2 año(s))"
+              }
+            },
+            {
+              "value": "ventilation_filters",
+              "label": {
+                "en": "Ventilation filters (6 month(s))",
+                "fr": "Filtres de VMC (6 mois)",
+                "de": "Lüftungsfilter (6 Monat(e))",
+                "es": "Filtros de ventilación (6 mes(es))"
+              }
+            },
+            {
+              "value": "vacuum_filter",
+              "label": {
+                "en": "Vacuum cleaner filter (3 month(s))",
+                "fr": "Filtre de l'aspirateur (3 mois)",
+                "de": "Staubsaugerfilter (3 Monat(e))",
+                "es": "Filtro de la aspiradora (3 mes(es))"
+              }
+            },
+            {
+              "value": "descaling",
+              "label": {
+                "en": "Descaling (2 month(s))",
+                "fr": "Détartrage (2 mois)",
+                "de": "Entkalken (2 Monat(e))",
+                "es": "Descalcificación (2 mes(es))"
+              }
+            },
+            {
+              "value": "smoke_detectors",
+              "label": {
+                "en": "Smoke detector batteries (1 year(s))",
+                "fr": "Piles des détecteurs de fumée (1 an(s))",
+                "de": "Rauchmelder-Batterien (1 Jahr(e))",
+                "es": "Pilas de los detectores de humo (1 año(s))"
+              }
+            },
+            {
+              "value": "air_conditioning",
+              "label": {
+                "en": "Air conditioning service (1 year(s))",
+                "fr": "Entretien de la climatisation (1 an(s))",
+                "de": "Klimaanlagen-Wartung (1 Jahr(e))",
+                "es": "Revisión del aire acondicionado (1 año(s))"
+              }
+            },
+            {
+              "value": "hood_filter",
+              "label": {
+                "en": "Cooker hood filter (3 month(s))",
+                "fr": "Filtre de la hotte (3 mois)",
+                "de": "Dunstabzugsfilter (3 Monat(e))",
+                "es": "Filtro de la campana (3 mes(es))"
+              }
+            },
+            {
+              "value": "water_filter",
+              "label": {
+                "en": "Water filter cartridge (1 month(s))",
+                "fr": "Cartouche filtrante (1 mois)",
+                "de": "Wasserfilterkartusche (1 Monat(e))",
+                "es": "Cartucho del filtro de agua (1 mes(es))"
+              }
+            },
+            {
+              "value": "gutters",
+              "label": {
+                "en": "Gutter cleaning (1 year(s))",
+                "fr": "Nettoyage des gouttières (1 an(s))",
+                "de": "Dachrinnenreinigung (1 Jahr(e))",
+                "es": "Limpieza de canalones (1 año(s))"
+              }
+            },
+            {
+              "value": "septic_tank",
+              "label": {
+                "en": "Septic tank emptying (4 year(s))",
+                "fr": "Vidange de la fosse septique (4 an(s))",
+                "de": "Klärgrubenentleerung (4 Jahr(e))",
+                "es": "Vaciado de la fosa séptica (4 año(s))"
+              }
+            },
+            {
+              "value": "fire_extinguisher",
+              "label": {
+                "en": "Fire extinguisher check (1 year(s))",
+                "fr": "Vérification de l'extincteur (1 an(s))",
+                "de": "Feuerlöscherprüfung (1 Jahr(e))",
+                "es": "Revisión del extintor (1 año(s))"
+              }
+            }
+          ]
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Name of the task",
+            "fr": "Nom de la tâche",
+            "de": "Name der Aufgabe",
+            "es": "Nombre de la tarea"
+          },
+          "description": {
+            "en": "Empty: the name of the suggested task.",
+            "fr": "Vide : le nom de la tâche proposée.",
+            "de": "Leer: der Name der vorgeschlagenen Aufgabe.",
+            "es": "Vacío: el nombre de la tarea propuesta."
+          },
+          "placeholder": {
+            "en": "e.g. Pellet stove service",
+            "fr": "ex. Entretien du poêle",
+            "de": "z. B. Pelletofen-Wartung",
+            "es": "p. ej. Revisión de la estufa"
+          }
+        },
+        {
+          "key": "every",
+          "type": "number",
+          "required": false,
+          "min": 1,
+          "max": 120,
+          "label": {
+            "en": "Every (number)",
+            "fr": "Tous les (nombre)",
+            "de": "Alle (Anzahl)",
+            "es": "Cada (número)"
+          },
+          "description": {
+            "en": "With the unit below. Empty: the period of the suggested task.",
+            "fr": "Avec l'unité ci-dessous. Vide : la période de la tâche proposée.",
+            "de": "Mit der Einheit unten. Leer: der Zeitraum der vorgeschlagenen Aufgabe.",
+            "es": "Con la unidad de abajo. Vacío: el periodo de la tarea propuesta."
+          }
+        },
+        {
+          "key": "unit",
+          "type": "select",
+          "required": false,
+          "label": {
+            "en": "Unit",
+            "fr": "Unité",
+            "de": "Einheit",
+            "es": "Unidad"
+          },
+          "options": [
+            {
+              "value": "days",
+              "label": {
+                "en": "days",
+                "fr": "jours",
+                "de": "Tage",
+                "es": "días"
+              }
+            },
+            {
+              "value": "weeks",
+              "label": {
+                "en": "weeks",
+                "fr": "semaines",
+                "de": "Wochen",
+                "es": "semanas"
+              }
+            },
+            {
+              "value": "months",
+              "label": {
+                "en": "months",
+                "fr": "mois",
+                "de": "Monate",
+                "es": "meses"
+              }
+            },
+            {
+              "value": "years",
+              "label": {
+                "en": "years",
+                "fr": "ans",
+                "de": "Jahre",
+                "es": "años"
+              }
+            }
+          ]
+        },
+        {
+          "key": "last_done",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Last done",
+            "fr": "Dernière fois faite",
+            "de": "Zuletzt erledigt",
+            "es": "Última vez hecha"
+          },
+          "description": {
+            "en": "2026-03-14, 14/03/2026, or -N for N days ago. Empty: today.",
+            "fr": "2026-03-14, 14/03/2026, ou -N pour il y a N jours. Vide : aujourd'hui.",
+            "de": "2026-03-14, 14.03.2026 oder -N für vor N Tagen. Leer: heute.",
+            "es": "2026-03-14, 14/03/2026, o -N para hace N días. Vacío: hoy."
+          },
+          "placeholder": {
+            "en": "e.g. 2026-03-14",
+            "fr": "ex. 14/03/2026",
+            "de": "z. B. 14.03.2026",
+            "es": "p. ej. 14/03/2026"
+          }
+        },
+        {
+          "key": "notice_days",
+          "type": "number",
+          "required": false,
+          "min": 0,
+          "max": 365,
+          "label": {
+            "en": "Notice (days)",
+            "fr": "Délai de prévenance (jours)",
+            "de": "Vorwarnzeit (Tage)",
+            "es": "Aviso previo (días)"
+          },
+          "description": {
+            "en": "Due soon this many days before the due date. Empty: the one of the suggested task, else 7.",
+            "fr": "Bientôt dû ce nombre de jours avant l'échéance. Vide : celui de la tâche proposée, sinon 7.",
+            "de": "So viele Tage vor der Fälligkeit bald fällig. Leer: die der vorgeschlagenen Aufgabe, sonst 7.",
+            "es": "Próximo a vencer estos días antes del vencimiento. Vacío: el de la tarea propuesta, si no 7."
+          }
         }
       ]
+    },
+    {
+      "key": "mark_done",
+      "label": {
+        "en": "Mark a task as done",
+        "fr": "Marquer une tâche comme faite",
+        "de": "Aufgabe als erledigt markieren",
+        "es": "Marcar una tarea como hecha"
+      },
+      "description": {
+        "en": "The count starts again from that day.",
+        "fr": "Le compteur repart de ce jour.",
+        "de": "Die Zählung beginnt ab diesem Tag neu.",
+        "es": "El contador vuelve a empezar desde ese día."
+      },
+      "fields": [
+        {
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Name of the task",
+            "fr": "Nom de la tâche",
+            "de": "Name der Aufgabe",
+            "es": "Nombre de la tarea"
+          }
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "required": false,
+          "label": {
+            "en": "Done on",
+            "fr": "Fait le",
+            "de": "Erledigt am",
+            "es": "Hecho el"
+          },
+          "description": {
+            "en": "2026-03-14, 14/03/2026, or -N for N days ago. Empty: today.",
+            "fr": "2026-03-14, 14/03/2026, ou -N pour il y a N jours. Vide : aujourd'hui.",
+            "de": "2026-03-14, 14.03.2026 oder -N für vor N Tagen. Leer: heute.",
+            "es": "2026-03-14, 14/03/2026, o -N para hace N días. Vacío: hoy."
+          },
+          "placeholder": {
+            "en": "e.g. 2026-03-14",
+            "fr": "ex. 14/03/2026",
+            "de": "z. B. 14.03.2026",
+            "es": "p. ej. 14/03/2026"
+          }
+        }
+      ]
+    },
+    {
+      "key": "delete_task",
+      "label": {
+        "en": "Delete a task",
+        "fr": "Supprimer une tâche",
+        "de": "Aufgabe löschen",
+        "es": "Eliminar una tarea"
+      },
+      "description": {
+        "en": "Deletes the task and its history, for good. Type its exact name to confirm.",
+        "fr": "Supprime la tâche et son historique, définitivement. Saisissez son nom exact pour confirmer.",
+        "de": "Löscht die Aufgabe und ihren Verlauf endgültig. Gib zur Bestätigung ihren genauen Namen ein.",
+        "es": "Elimina la tarea y su historial, de forma definitiva. Escriba su nombre exacto para confirmar."
+      },
+      "fields": [
+        {
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Name of the task",
+            "fr": "Nom de la tâche",
+            "de": "Name der Aufgabe",
+            "es": "Nombre de la tarea"
+          }
+        }
+      ]
+    },
+    {
+      "key": "show_tasks",
+      "label": {
+        "en": "Show the tasks",
+        "fr": "Afficher les tâches",
+        "de": "Aufgaben anzeigen",
+        "es": "Mostrar las tareas"
+      },
+      "description": {
+        "en": "The tasks and their next due dates.",
+        "fr": "Les tâches et leurs prochaines échéances.",
+        "de": "Die Aufgaben und ihre nächsten Fälligkeiten.",
+        "es": "Las tareas y sus próximos vencimientos."
+      }
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "task_due_soon",
+      "label": {
+        "en": "Maintenance due soon",
+        "fr": "Entretien bientôt dû",
+        "de": "Wartung bald fällig",
+        "es": "Mantenimiento próximo"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A task entered its notice period (e.g. 30 days before the boiler service). Once per due date.",
+        "fr": "Une tâche entre dans son délai de prévenance (ex. 30 jours avant l'entretien de la chaudière). Une fois par échéance.",
+        "de": "Eine Aufgabe ist in ihre Vorwarnzeit eingetreten (z. B. 30 Tage vor der Heizungswartung). Einmal pro Fälligkeit.",
+        "es": "Una tarea entra en su periodo de aviso (p. ej. 30 días antes de la revisión de la caldera). Una vez por vencimiento."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "task",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
+          "label": {
+            "en": "Task (empty: any)",
+            "fr": "Tâche (vide : toutes)",
+            "de": "Aufgabe (leer: alle)",
+            "es": "Tarea (vacío: todas)"
+          }
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "task_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Task",
+            "fr": "Tâche",
+            "de": "Aufgabe",
+            "es": "Tarea"
+          }
+        },
+        {
+          "key": "due",
+          "type": "string",
+          "label": {
+            "en": "Due date (YYYY-MM-DD)",
+            "fr": "Échéance (AAAA-MM-JJ)",
+            "de": "Fälligkeit (JJJJ-MM-TT)",
+            "es": "Vencimiento (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "days_left",
+          "type": "number",
+          "label": {
+            "en": "Days left (negative: late)",
+            "fr": "Jours restants (négatif : retard)",
+            "de": "Verbleibende Tage (negativ: überfällig)",
+            "es": "Días restantes (negativo: retraso)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "task_overdue",
+      "label": {
+        "en": "Maintenance overdue",
+        "fr": "Entretien en retard",
+        "de": "Wartung überfällig",
+        "es": "Mantenimiento atrasado"
+      },
+      "description": {
+        "en": "A task passed its due date without being marked as done. Once per due date.",
+        "fr": "Une tâche a dépassé son échéance sans être marquée comme faite. Une fois par échéance.",
+        "de": "Eine Aufgabe hat ihre Fälligkeit überschritten, ohne als erledigt markiert zu sein. Einmal pro Fälligkeit.",
+        "es": "Una tarea ha superado su vencimiento sin marcarse como hecha. Una vez por vencimiento."
+      },
+      "fields": [
+        {
+          "key": "task",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Task (empty: any)",
+            "fr": "Tâche (vide : toutes)",
+            "de": "Aufgabe (leer: alle)",
+            "es": "Tarea (vacío: todas)"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "task_name",
+          "type": "string",
+          "label": {
+            "en": "Task",
+            "fr": "Tâche",
+            "de": "Aufgabe",
+            "es": "Tarea"
+          }
+        },
+        {
+          "key": "due",
+          "type": "string",
+          "label": {
+            "en": "Due date (YYYY-MM-DD)",
+            "fr": "Échéance (AAAA-MM-JJ)",
+            "de": "Fälligkeit (JJJJ-MM-TT)",
+            "es": "Vencimiento (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "days_left",
+          "type": "number",
+          "label": {
+            "en": "Days left (negative: late)",
+            "fr": "Jours restants (négatif : retard)",
+            "de": "Verbleibende Tage (negativ: überfällig)",
+            "es": "Días restantes (negativo: retraso)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "mark_done",
+      "label": {
+        "en": "Mark maintenance as done",
+        "fr": "Marquer un entretien comme fait",
+        "de": "Wartung als erledigt markieren",
+        "es": "Marcar un mantenimiento como hecho"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "The count of the task starts again, from today or from the date given.",
+        "fr": "Le compteur de la tâche repart, d'aujourd'hui ou de la date indiquée.",
+        "de": "Die Zählung der Aufgabe beginnt neu, ab heute oder ab dem angegebenen Datum.",
+        "es": "El contador de la tarea vuelve a empezar, desde hoy o desde la fecha indicada."
       },
       "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
+          "key": "task",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Task",
+            "fr": "Tâche",
+            "de": "Aufgabe",
+            "es": "Tarea"
+          },
           "required": true
+        },
+        {
+          "key": "date",
+          "type": "string",
+          "label": {
+            "en": "Done on (optional)",
+            "fr": "Fait le (facultatif)",
+            "de": "Erledigt am (optional)",
+            "es": "Hecho el (opcional)"
+          },
+          "description": {
+            "en": "2026-03-14, 14/03/2026, or -N for N days ago. Empty: today.",
+            "fr": "2026-03-14, 14/03/2026, ou -N pour il y a N jours. Vide : aujourd'hui.",
+            "de": "2026-03-14, 14.03.2026 oder -N für vor N Tagen. Leer: heute.",
+            "es": "2026-03-14, 14/03/2026, o -N para hace N días. Vacío: hoy."
+          },
+          "placeholder": {
+            "en": "e.g. 2026-03-14",
+            "fr": "ex. 14/03/2026",
+            "de": "z. B. 14.03.2026",
+            "es": "p. ej. 14/03/2026"
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "task_name",
+          "type": "string",
+          "label": {
+            "en": "Task",
+            "fr": "Tâche",
+            "de": "Aufgabe",
+            "es": "Tarea"
+          }
+        },
+        {
+          "key": "last_done",
+          "type": "string",
+          "label": {
+            "en": "Last done (YYYY-MM-DD)",
+            "fr": "Dernière fois (AAAA-MM-JJ)",
+            "de": "Zuletzt erledigt (JJJJ-MM-TT)",
+            "es": "Última vez (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "next_due",
+          "type": "string",
+          "label": {
+            "en": "Next due date (YYYY-MM-DD)",
+            "fr": "Prochaine échéance (AAAA-MM-JJ)",
+            "de": "Nächste Fälligkeit (JJJJ-MM-TT)",
+            "es": "Próximo vencimiento (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "days_left",
+          "type": "number",
+          "label": {
+            "en": "Days left (negative: late)",
+            "fr": "Jours restants (négatif : retard)",
+            "de": "Verbleibende Tage (negativ: überfällig)",
+            "es": "Días restantes (negativo: retraso)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "read_tasks",
+      "label": {
+        "en": "Read the maintenance tasks",
+        "fr": "Lire les tâches d'entretien",
+        "de": "Wartungsaufgaben lesen",
+        "es": "Leer las tareas de mantenimiento"
+      },
+      "description": {
+        "en": "What is due soon or overdue as one text, and the counts, for a message or a spoken announcement.",
+        "fr": "Ce qui est bientôt dû ou en retard en un texte, et les nombres, pour un message ou une annonce vocale.",
+        "de": "Was bald fällig oder überfällig ist als ein Text und die Anzahlen, für eine Nachricht oder eine Sprachansage.",
+        "es": "Lo próximo a vencer o atrasado en un texto, y los números, para un mensaje o un anuncio por voz."
+      },
+      "timeout_seconds": 15,
+      "fields": [
+        {
+          "key": "scope",
+          "type": "select",
+          "label": {
+            "en": "Tasks in the text (empty: due soon or overdue)",
+            "fr": "Tâches du texte (vide : bientôt dues ou en retard)",
+            "de": "Aufgaben im Text (leer: bald fällig oder überfällig)",
+            "es": "Tareas del texto (vacío: próximas o atrasadas)"
+          },
+          "options": [
+            {
+              "value": "soon",
+              "label": {
+                "en": "Due soon or overdue",
+                "fr": "Bientôt dues ou en retard",
+                "de": "Bald fällig oder überfällig",
+                "es": "Próximas o atrasadas"
+              }
+            },
+            {
+              "value": "all",
+              "label": {
+                "en": "All",
+                "fr": "Toutes",
+                "de": "Alle",
+                "es": "Todas"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "key": "overdue",
+          "type": "number",
+          "label": {
+            "en": "Tasks overdue",
+            "fr": "Tâches en retard",
+            "de": "Überfällige Aufgaben",
+            "es": "Tareas atrasadas"
+          }
+        },
+        {
+          "key": "due_soon",
+          "type": "number",
+          "label": {
+            "en": "Tasks due soon",
+            "fr": "Tâches bientôt dues",
+            "de": "Bald fällige Aufgaben",
+            "es": "Tareas próximas"
+          }
+        },
+        {
+          "key": "next_task",
+          "type": "string",
+          "label": {
+            "en": "Next task",
+            "fr": "Prochaine tâche",
+            "de": "Nächste Aufgabe",
+            "es": "Próxima tarea"
+          }
+        },
+        {
+          "key": "next_due",
+          "type": "string",
+          "label": {
+            "en": "Its due date (YYYY-MM-DD)",
+            "fr": "Son échéance (AAAA-MM-JJ)",
+            "de": "Deren Fälligkeit (JJJJ-MM-TT)",
+            "es": "Su vencimiento (AAAA-MM-DD)"
+          }
+        },
+        {
+          "key": "next_days_left",
+          "type": "number",
+          "label": {
+            "en": "Its days left",
+            "fr": "Ses jours restants",
+            "de": "Deren verbleibende Tage",
+            "es": "Sus días restantes"
+          }
+        },
+        {
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Tasks (text)",
+            "fr": "Tâches (texte)",
+            "de": "Aufgaben (Text)",
+            "es": "Tareas (texto)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "upcoming",
+      "label": {
+        "en": "Upcoming maintenance",
+        "fr": "Prochains entretiens",
+        "de": "Nächste Wartungen",
+        "es": "Próximos mantenimientos"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "The next maintenance tasks, the ones due soon or late, and a Done button.",
+        "fr": "Les prochains entretiens, ceux bientôt dus ou en retard, et un bouton Fait.",
+        "de": "Die nächsten Wartungen, bald fällige oder überfällige, und eine Erledigt-Taste.",
+        "es": "Los próximos mantenimientos, los próximos a vencer o atrasados, y un botón Hecho."
+      },
+      "icon": "tool",
+      "action_timeout_seconds": 15,
+      "settings": [
+        {
+          "key": "scope",
+          "type": "select",
+          "required": false,
+          "default": "all",
+          "label": {
+            "en": "Tasks shown",
+            "fr": "Tâches affichées",
+            "de": "Angezeigte Aufgaben",
+            "es": "Tareas mostradas"
+          },
+          "options": [
+            {
+              "value": "all",
+              "label": {
+                "en": "All, by due date",
+                "fr": "Toutes, par échéance",
+                "de": "Alle, nach Fälligkeit",
+                "es": "Todas, por vencimiento"
+              }
+            },
+            {
+              "value": "soon",
+              "label": {
+                "en": "Due soon or overdue only",
+                "fr": "Bientôt dues ou en retard seulement",
+                "de": "Nur bald fällig oder überfällig",
+                "es": "Solo próximas o atrasadas"
+              }
+            }
+          ]
+        },
+        {
+          "key": "rows",
+          "type": "select",
+          "required": false,
+          "default": "5",
+          "label": {
+            "en": "Rows",
+            "fr": "Lignes",
+            "de": "Zeilen",
+            "es": "Filas"
+          },
+          "options": [
+            {
+              "value": "3",
+              "label": {
+                "en": "3",
+                "fr": "3",
+                "de": "3",
+                "es": "3"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5",
+                "fr": "5",
+                "de": "5",
+                "es": "5"
+              }
+            },
+            {
+              "value": "8",
+              "label": {
+                "en": "8",
+                "fr": "8",
+                "de": "8",
+                "es": "8"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "10",
+                "fr": "10",
+                "de": "10",
+                "es": "10"
+              }
+            }
+          ]
+        },
+        {
+          "key": "hide",
+          "type": "multi_select",
+          "required": false,
+          "label": {
+            "en": "Parts to hide",
+            "fr": "Éléments à masquer",
+            "de": "Auszublendende Elemente",
+            "es": "Elementos que ocultar"
+          },
+          "options": [
+            {
+              "value": "tile",
+              "label": {
+                "en": "Due soon count",
+                "fr": "Nombre à prévoir",
+                "de": "Anzahl bald fällig",
+                "es": "Número por hacer"
+              }
+            },
+            {
+              "value": "done",
+              "label": {
+                "en": "Done button",
+                "fr": "Bouton Fait",
+                "de": "Erledigt-Taste",
+                "es": "Botón Hecho"
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -1,61 +1,143 @@
-# Demo Devices Template
+# Maintenance reminders
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+The recurring jobs of the house, kept **in Gladys itself**: the boiler
+service every year, the ventilation filters every six months, the chimney,
+the vehicle inspection, the descaling, the batteries of the smoke
+detectors... Each task counts the days left, warns you before the due date,
+says when it is late, and a tap on **Done** starts the count again. No
+account, no cloud.
 
-## What you get
+> **Feedback welcome.** This integration was tested with the test Gladys of
+> the SDK and in its Docker image, not yet in everyday use with a real
+> Gladys. If something does not work as described, please say so on the
+> [Gladys forum](https://community.gladysassistant.com) or in the
+> [issues](https://github.com/guim31/gladys-entretien/issues).
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+## What you need
 
-## Configuration
+- Gladys Assistant 5.2.0 or later (the form of the widget button).
+- Nothing else: the tasks are stored by the integration in its own volume.
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+## Set up
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+1. Install the integration, open its **Configuration** tab.
+2. **Create or change a task**:
+   - choose a **suggested task** (boiler service 1 year, chimney sweeping
+     1 year, vehicle inspection 2 years, ventilation filters 6 months,
+     vacuum cleaner filter 3 months, descaling 2 months, smoke detector
+     batteries 1 year, air conditioning service, cooker hood filter, water
+     filter cartridge, gutters, septic tank, fire extinguisher): name,
+     period and notice are filled in for you;
+   - or type a **name** and a period: **Every** (a number) and a **Unit**
+     (days, weeks, months, years), ten years at most;
+   - **Last done**: `2026-03-14`, `14/03/2026`, or `-30` for 30 days ago;
+     empty, today;
+   - **Notice (days)**: how many days before the due date the task is "due
+     soon" (empty: the one of the suggested task, else 7).
+3. Open the **Discovery** tab and add the task: it becomes a device of
+   Gladys, which you can rename and put in a room.
+4. Add the **Upcoming maintenance** widget to a dashboard.
 
-## Actions
+The same action **changes** a task: give its name and only what changes
+(the period, the notice, or a corrected last date).
+**Mark a task as done** records that it was done, today or on the date
+typed. **Show the tasks** gives every task and its next due date.
+**Delete a task** deletes it and its history for good: type its exact name
+to confirm, then delete its device in Gladys too.
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+**Language of the feature names**: the language of the names given to the
+features when a task is added, of the dates they show and of the texts sent
+to scenes (French by default).
 
-## Scenes
+The due date of a monthly or yearly task keeps the day of the month, or
+takes the last day of a shorter month: done on 31 January, a monthly task
+is due on 28 February (29 in a leap year). Days change at midnight in the
+time zone of Gladys.
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+## Devices
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+One device per task, with six features:
+
+| Feature       | Value                                                                    |
+| ------------- | ------------------------------------------------------------------------ |
+| Days left     | days until the due date, negative once late                              |
+| Period left   | the part of the period left, 100 % the day it is done, 0 on the due date |
+| Due soon      | 1 within the notice, up to the due date                                  |
+| Overdue       | 1 from the day after the due date until it is done                       |
+| Last done     | the last date it was done                                                |
+| Next due date | the due date                                                             |
+
+The names are those of the configured language (here, English). Gladys does
+not offer calendar events to a device integration: the due dates are
+features, the widget and the scenes, not entries of the Gladys calendar.
 
 ## Dashboard
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The **Upcoming maintenance** widget shows how many tasks are due soon or
+late, then the next tasks by due date: late in red ("8 d late"), due soon
+in orange ("in 11 d"), the others with their date. **Done** opens a form:
+choose the task, and the date it was done (empty: today).
+
+Settings: the tasks shown (all, or only the ones due soon or late), the
+number of rows (3 to 10), and the parts to hide (the count, the Done
+button).
+
+## Scenes
+
+### Triggers
+
+- **Maintenance due soon**: a task entered its notice (e.g. 30 days before
+  the boiler service). Once per due date.
+- **Maintenance overdue**: a task passed its due date without being marked
+  as done. Once per due date.
+
+Both can be limited to one task (empty: any) and give the name of the task,
+its due date (`YYYY-MM-DD`) and its days left.
+
+### Actions
+
+- **Mark maintenance as done**: the count of the task starts again, from
+  today or from a date (`2026-03-14`, `14/03/2026`, `-2`). Gives the last
+  date, the next due date and the days left.
+- **Read the maintenance tasks**: what is due soon or late as one text
+  ("Ventilation filters (8 d late), Boiler service (in 11 d)"), or every
+  task, with the number of tasks overdue and due soon and the next task.
+
+### Scene ideas
+
+- "Maintenance due soon": a Telegram message "Book the boiler service
+  before {{due}}".
+- Every Monday at 8: **Read the maintenance tasks**, then a message with
+  the text when something is due.
+- An NFC tag on the vacuum cleaner: **Mark maintenance as done** for its
+  filter.
+
+## Your data
+
+Everything is stored in one file, `tasks.json`, in the volume of the
+integration (`/data`), with the previous version as `tasks.json.bak`. Each
+change is written to a temporary file then renamed: a power cut never leaves
+half a file. If the file is unreadable at start, it is kept as
+`tasks.json.corrupt` and the backup is read instead. The last twenty dates
+each task was done are kept. Uninstalling the integration deletes its
+volume, and the tasks with it.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **The task is not in the scenes or in the widget settings**: add its
+  device in the Discovery tab first.
+- **"Date not understood"**: use `2026-03-14`, `14/03/2026` or `-7`.
+- **"This date is in the future"**: give the day it was done.
+- **"The tasks could not be saved"**: the volume of the integration is full
+  or read-only; nothing was changed. See the logs of the integration.
+- Logs: in Gladys, the integration page, **Logs**. Start the integration
+  with `LOG_LEVEL=debug` for more detail.
+
+## Limits
+
+- 100 tasks, 40 characters per name, a period of ten years at most, a
+  notice of 365 days at most. The days left shown are bounded to ±3660.
+- One date per task: no time of day, no sub-tasks, no reminder repeated
+  every day (a scene on "Overdue" can do it).
+- No entries in the Gladys calendar (see Devices), no import from another
+  service.

@@ -30,6 +30,10 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration talks to Gladys only: it opens no port and reaches no other
+server. It stores the maintenance tasks (names, periods, dates they were
+done) in `/data/tasks.json` and its backup `/data/tasks.json.bak`, in the
+volume of the integration; it holds no secret.
+
 Out of scope: Gladys Assistant itself (see its
-[security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+[security policy](https://github.com/GladysAssistant/Gladys/security/policy)).
